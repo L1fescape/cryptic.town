@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cryptic.town.home;
+option go_package = "home";
+
+service CrypticTown {
+  rpc MakeHome(User) returns (Home);
+}
+
+message User {
+  string name = 1;
+}
+
+message Home {
+  string name = 1;
+  string body = 2;
+}
