@@ -13,7 +13,7 @@ clean: ; $(info $(M) cleaning)	@
 	@rm -rf rpc/out
 
 .PHONY: genrpc
-genrpc: ; $(info $(M) generating proto files)	@
+genrpc: clean; $(info $(M) generating proto files)	@
 	$Q @mkdir ./rpc/out
 	$Q @protoc -I ./rpc --twirp_out=./rpc/out --go_out=./rpc/out ./rpc/home.proto
 

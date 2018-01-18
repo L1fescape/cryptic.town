@@ -1,8 +1,5 @@
 syntax = "proto3";
 
-package cryptic.town.home;
-option go_package = "home";
-
 service CrypticTown {
   rpc MakeHome(User) returns (Home);
 }
