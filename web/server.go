@@ -27,7 +27,7 @@ func GetHandler(client *redis.Client) *mux.Router {
     json.NewEncoder(w).Encode(keys)
   })
 
-  r.HandleFunc("/~{name}", func(w http.ResponseWriter, req *http.Request) {
+  r.HandleFunc("/{name}", func(w http.ResponseWriter, req *http.Request) {
     name := mux.Vars(req)["name"]
     val, err := client.Get(name).Result()
     if err != nil {
