@@ -27,3 +27,9 @@ build-web: clean; $(info $(M) building frontend)	@
 run: ; $(info $(M) running service)	@
 	$(GO) run main.go
 
+.PHONY: dev
+all: clean build-proto dev-web
+
+.PHONY: dev-web
+dev-web: clean; $(info $(M) building frontend)	@
+	@cd web && yarn dev

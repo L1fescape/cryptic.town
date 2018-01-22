@@ -14,7 +14,7 @@ import (
 	web "github.com/l1fescape/cryptic.town/web"
 )
 
-var DEFAULT_PORT = "8081"
+var DEFAULT_PORT = "8080"
 
 type Server struct {
 	logger *log.Logger

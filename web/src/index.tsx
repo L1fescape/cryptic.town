@@ -16,7 +16,7 @@ class Root extends React.Component<{}, State> {
     console.log(this.state)
     return (
       <div>
-        hi there
+        {this.state.users.map(user => <a href={`/~${user}`} key={user}>{user}</a>)}
       </div>
     )
   }
