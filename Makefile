@@ -21,7 +21,7 @@ build-proto: ; $(info $(M) generating proto files)	@
 
 .PHONY: build-web
 build-web: clean; $(info $(M) building frontend)	@
-	@cd web && yarn build
+	@cd web && yarn start
 
 .PHONY: run
 run: ; $(info $(M) running service)	@

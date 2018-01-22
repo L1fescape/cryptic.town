@@ -1,27 +1,27 @@
 package rpc
 
 import (
-  "context"
+	"context"
 
-  "github.com/go-redis/redis"
-  pb "cryptic.town/rpc/out"
+	"github.com/go-redis/redis"
+	pb "github.com/l1fescape/cryptic.town/rpc/out"
 )
 
 var Prefix = pb.CrypticTownPathPrefix
 
 type RPCServer struct {
-  client *redis.Client
+	client *redis.Client
 }
 
 func (s *RPCServer) MakeHome(ctx context.Context, req *pb.Home) (*pb.Home, error) {
-  err := s.client.Set(req.Name, req.Body, 0).Err()
+	err := s.client.Set(req.Name, req.Body, 0).Err()
 	if err != nil {
 		panic(err)
-  }
+	}
 
-  return &pb.Home{Name: req.Name, Body: req.Body}, nil
+	return &pb.Home{Name: req.Name, Body: req.Body}, nil
 }
 
 func GetHandler(client *redis.Client) pb.TwirpServer {
-  return pb.NewCrypticTownServer(&RPCServer{client: client}, nil)
+	return pb.NewCrypticTownServer(&RPCServer{client: client}, nil)
 }
