@@ -15,7 +15,7 @@ class Root extends React.Component<{}, State> {
   public render() {
     return (
       <div>
-        {this.state.users.map(user => <a href={user} key={user}>{user}</a>)}
+        {this.state.users.map(user => <p key={user}><a href={user}>{user}</a></p>)}
       </div>
     )
   }

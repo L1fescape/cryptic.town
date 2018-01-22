@@ -33,7 +33,7 @@ func GetHandler(client *redis.Client) *mux.Router {
     if err != nil {
       val = "no user"
     }
-    fmt.Fprint(w, val)
+    fmt.Fprint(w, "<!doctype html>" + val)
   })
 
   r.Handle("/fonts/font-awesome/css/{rest}", http.FileServer(http.Dir(dist)))
