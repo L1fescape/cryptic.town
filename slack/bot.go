@@ -13,10 +13,6 @@ type Bot struct {
   store  *db.Store
 }
 
-const (
-  privMessageChannelID = "D04GCSJUU"
-)
-
 var postMessageParams = slack.PostMessageParameters{
   Username: "cryptic.town",
   IconEmoji: ":house:",
@@ -30,8 +26,6 @@ func New(token string, store *db.Store) *Bot {
     api: slack.New(token),
     store: store,
   }
-
-  slack.SetLogger(util.Log)
 
   return bot
 }
@@ -61,8 +55,12 @@ func (b *Bot) Stop() {
   }
 }
 
+func isDM(channel string) bool {
+  return string(channel)[0] == byte('D')
+}
+
 func (b *Bot) HandleMessage(channel string, userID string, text string) (error) {
-  if channel == privMessageChannelID && userID != "" {
+  if isDM(channel) && userID != "" {
     return b.HandlePrivateMessage(channel, userID, text)
   }
   return nil
@@ -97,7 +95,7 @@ func (b *Bot) SendCommandsList(channel string) error {
   message := `
 Commands:
 	token					Returns your auth token
-	new token			Generates a new token
+	new token			Generates a new auth token
 `
   _, _, err := b.api.PostMessage(channel, message, postMessageParams)
   return err
@@ -106,7 +104,12 @@ Commands:
 func (b *Bot) SendUserToken(channel string, username string) error {
   token, err := b.store.GetUserToken(username)
   if err != nil {
-    return err
+    // if the user doesn't exist, this will create it
+    // todo: this feels hacky
+    token, err = b.store.ResetUserToken(username)
+    if err != nil {
+      return err
+    }
   }
   _, _, err = b.api.PostMessage(channel, "`"+token+"`", postMessageParams)
   return err

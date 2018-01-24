@@ -83,17 +83,27 @@ func (s *Store) GetUserToken(username string) (string, error) {
 }
 
 func (s *Store) ResetUserToken(username string) (string, error) {
+  var user *User
   dbuser, err := s.getUser(username)
   if err != nil && err != redis.Nil {
     return "", err
   }
 
   token := util.GenToken()
-  user := &User{
-    Name: dbuser.Name,
-    Token: token,
-    Body: dbuser.Body,
+  if dbuser == nil {
+    user = &User{
+      Name: username,
+      Token: token,
+      Body: "",
+    }
+  } else {
+    user = &User{
+      Name: dbuser.Name,
+      Token: token,
+      Body: dbuser.Body,
+    }
   }
+
   _, err = s.client.HSet("users", username, user).Result()
   if err != nil {
     return "", err

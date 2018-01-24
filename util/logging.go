@@ -27,3 +27,15 @@ func WrapHandlerWithLogging(wrappedHandler http.Handler) http.Handler {
   })
 }
 
+func NewFilelog(filename string) (*log.Logger, error) {
+  f, err := os.Create(filename)
+  if err != nil {
+    return nil, err
+  }
+  defer f.Close()
+
+  logger := log.New(f, "", log.Ldate|log.Ltime)
+
+  return logger, nil
+}
+
