@@ -64,7 +64,6 @@ func (s *Store) getUser(username string) (*User, error) {
   return user, nil
 }
 
-
 func (s *Store) GetUserHome(username string) (*Home, error) {
   user, err := s.getUser(username)
   if err != nil {
@@ -83,6 +82,26 @@ func (s *Store) GetUserToken(username string) (string, error) {
   return user.Token, nil
 }
 
+func (s *Store) ResetUserToken(username string) (string, error) {
+  dbuser, err := s.getUser(username)
+  if err != nil && err != redis.Nil {
+    return "", err
+  }
+
+  token := util.GenToken()
+  user := &User{
+    Name: dbuser.Name,
+    Token: token,
+    Body: dbuser.Body,
+  }
+  _, err = s.client.HSet("users", username, user).Result()
+  if err != nil {
+    return "", err
+  }
+
+  return token, nil
+}
+
 func (s *Store) GetUsers() ([]string, error) {
   users, err := s.client.HKeys("users").Result()
   if err != nil {
@@ -91,7 +110,7 @@ func (s *Store) GetUsers() ([]string, error) {
   return users, nil
 }
 
-func (s *Store) CreateHome(userID string, username string, body string) (*Home, error) {
+func (s *Store) CreateHome(username string, body string) (*Home, error) {
   dbuser, err := s.getUser(username)
   if err != nil && err != redis.Nil {
     return nil, err
@@ -102,7 +121,7 @@ func (s *Store) CreateHome(userID string, username string, body string) (*Home, 
 
   user := &User{
     Name: username,
-    Token: userID,
+    Token: util.GenToken(),
     Body: body,
   }
   _, err = s.client.HSet("users", username, user).Result()
@@ -113,7 +132,7 @@ func (s *Store) CreateHome(userID string, username string, body string) (*Home, 
   return &Home{ Name: username, Body: body }, nil
 }
 
-func (s *Store) SetHome(userID string, username string, body string) (*Home, error) {
+func (s *Store) SetHome(username string, token string, body string) (*Home, error) {
   home, err := s.GetUserHome(username)
   if home == nil {
     return nil, errors.New("user does not exist")
@@ -122,17 +141,17 @@ func (s *Store) SetHome(userID string, username string, body string) (*Home, err
     return nil, err
   }
 
-  token, err := s.GetUserToken(username)
+  dbToken, err := s.GetUserToken(username)
   if err != nil {
     return nil, err
   }
-  if token != userID {
-    return nil, errors.New("user token incorrect")
+  if dbToken != token {
+    return nil, errors.New("unauthorized")
   }
 
   user := &User{
     Name: home.Name,
-    Token: token,
+    Token: dbToken,
     Body: body,
   }
   _, err = s.client.HSet("users", username, user).Result()
@@ -143,18 +162,19 @@ func (s *Store) SetHome(userID string, username string, body string) (*Home, err
   return &Home{ Name: home.Name, Body: body }, nil
 }
 
-func (s *Store) CreateOrSetHome(userID string, userName string, body string) (*Home, error) {
-  user, err := s.getUser(userName)
+func (s *Store) CreateOrSetHome(username string, body string) (*Home, error) {
+  user, err := s.getUser(username)
   if user != nil {
-    return s.SetHome(userID, userName, body)
+    return s.SetHome(username, user.Token, body)
   }
   if err != nil && err != redis.Nil {
     return nil, err
   }
 
-  return s.CreateHome(userID, userName, body)
+  return s.CreateHome(username, body)
 }
 
 func (s *Store) Quit() {
+  // https://github.com/go-redis/redis/blob/cfed9ab470998d048dcd221ad916cef784e9fa21/commands.go#L310
   // s.client.Quit()
 }

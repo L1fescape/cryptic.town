@@ -8,27 +8,22 @@ import (
 
 var Log = log.New(os.Stdout, "", 0)
 
-type loggingResponseWriter struct {
+type responseWriter struct {
   http.ResponseWriter
   statusCode int
 }
 
-func NewLoggingResponseWriter(w http.ResponseWriter) *loggingResponseWriter {
-  return &loggingResponseWriter{w, http.StatusOK}
-}
-
-func (lrw *loggingResponseWriter) WriteHeader(code int) {
-  lrw.statusCode = code
-  lrw.ResponseWriter.WriteHeader(code)
+func (rw *responseWriter) WriteHeader(code int) {
+  rw.statusCode = code
+  rw.ResponseWriter.WriteHeader(code)
 }
 
 func WrapHandlerWithLogging(wrappedHandler http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-    lrw := NewLoggingResponseWriter(w)
-    wrappedHandler.ServeHTTP(lrw, req)
+    rw := &responseWriter{w, http.StatusOK}
+    wrappedHandler.ServeHTTP(rw, req)
 
-    statusCode := lrw.statusCode
-    Log.Printf("%s %s %d %s", req.Host, req.Method, statusCode, req.URL.Path)
+    Log.Printf("%s %s %d %s", req.Host, req.Method, rw.statusCode, req.URL.Path)
   })
 }
 

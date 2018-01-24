@@ -14,7 +14,7 @@ type RPCServer struct {
 }
 
 func (s *RPCServer) SetHome(ctx context.Context, req *pb.SetHomeRequest) (*pb.Home, error) {
-  home, err := s.store.SetHome(req.Token, req.Name, req.Body)
+  home, err := s.store.SetHome(req.Name, req.Token, req.Body)
   if err != nil {
     return nil, err
   }
