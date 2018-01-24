@@ -1,11 +1,13 @@
 syntax = "proto3";
 
 service CrypticTown {
-  rpc MakeHome(Home) returns (Home);
+  rpc SetHome(SetHomeRequest) returns (Home);
 }
 
-message User {
-  string name = 1;
+message SetHomeRequest {
+  string token = 1;
+  string name = 2;
+  string body = 3;
 }
 
 message Home {

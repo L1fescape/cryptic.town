@@ -33,7 +33,7 @@ import url "net/url"
 // =====================
 
 type CrypticTown interface {
-	MakeHome(context.Context, *Home) (*Home, error)
+	SetHome(context.Context, *SetHomeRequest) (*Home, error)
 }
 
 // ===========================
@@ -54,8 +54,8 @@ func NewCrypticTownProtobufClient(addr string, client *http.Client) CrypticTown 
 	}
 }
 
-func (c *crypticTownProtobufClient) MakeHome(ctx context.Context, in *Home) (*Home, error) {
-	url := c.urlBase + CrypticTownPathPrefix + "MakeHome"
+func (c *crypticTownProtobufClient) SetHome(ctx context.Context, in *SetHomeRequest) (*Home, error) {
+	url := c.urlBase + CrypticTownPathPrefix + "SetHome"
 	out := new(Home)
 	err := doProtoRequest(ctx, c.client, url, in, out)
 	return out, err
@@ -79,8 +79,8 @@ func NewCrypticTownJSONClient(addr string, client *http.Client) CrypticTown {
 	}
 }
 
-func (c *crypticTownJSONClient) MakeHome(ctx context.Context, in *Home) (*Home, error) {
-	url := c.urlBase + CrypticTownPathPrefix + "MakeHome"
+func (c *crypticTownJSONClient) SetHome(ctx context.Context, in *SetHomeRequest) (*Home, error) {
+	url := c.urlBase + CrypticTownPathPrefix + "SetHome"
 	out := new(Home)
 	err := doJSONRequest(ctx, c.client, url, in, out)
 	return out, err
@@ -134,8 +134,8 @@ func (s *crypticTownServer) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 	}
 
 	switch req.URL.Path {
-	case "/twirp/CrypticTown/MakeHome":
-		s.serveMakeHome(ctx, resp, req)
+	case "/twirp/CrypticTown/SetHome":
+		s.serveSetHome(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -145,12 +145,12 @@ func (s *crypticTownServer) ServeHTTP(resp http.ResponseWriter, req *http.Reques
 	}
 }
 
-func (s *crypticTownServer) serveMakeHome(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *crypticTownServer) serveSetHome(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	switch req.Header.Get("Content-Type") {
 	case "application/json":
-		s.serveMakeHomeJSON(ctx, resp, req)
+		s.serveSetHomeJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveMakeHomeProtobuf(ctx, resp, req)
+		s.serveSetHomeProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -158,9 +158,9 @@ func (s *crypticTownServer) serveMakeHome(ctx context.Context, resp http.Respons
 	}
 }
 
-func (s *crypticTownServer) serveMakeHomeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *crypticTownServer) serveSetHomeJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "MakeHome")
+	ctx = ctxsetters.WithMethodName(ctx, "SetHome")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -168,7 +168,7 @@ func (s *crypticTownServer) serveMakeHomeJSON(ctx context.Context, resp http.Res
 	}
 
 	defer closebody(req.Body)
-	reqContent := new(Home)
+	reqContent := new(SetHomeRequest)
 	unmarshaler := jsonpb.Unmarshaler{AllowUnknownFields: true}
 	if err = unmarshaler.Unmarshal(req.Body, reqContent); err != nil {
 		err = wrapErr(err, "failed to parse request json")
@@ -186,7 +186,7 @@ func (s *crypticTownServer) serveMakeHomeJSON(ctx context.Context, resp http.Res
 				panic(r)
 			}
 		}()
-		respContent, err = s.MakeHome(ctx, reqContent)
+		respContent, err = s.SetHome(ctx, reqContent)
 	}()
 
 	if err != nil {
@@ -194,7 +194,7 @@ func (s *crypticTownServer) serveMakeHomeJSON(ctx context.Context, resp http.Res
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Home and nil error while calling MakeHome. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Home and nil error while calling SetHome. nil responses are not supported"))
 		return
 	}
 
@@ -217,9 +217,9 @@ func (s *crypticTownServer) serveMakeHomeJSON(ctx context.Context, resp http.Res
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *crypticTownServer) serveMakeHomeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *crypticTownServer) serveSetHomeProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "MakeHome")
+	ctx = ctxsetters.WithMethodName(ctx, "SetHome")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -233,7 +233,7 @@ func (s *crypticTownServer) serveMakeHomeProtobuf(ctx context.Context, resp http
 		s.writeError(ctx, resp, twirp.InternalErrorWith(err))
 		return
 	}
-	reqContent := new(Home)
+	reqContent := new(SetHomeRequest)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		err = wrapErr(err, "failed to parse request proto")
 		s.writeError(ctx, resp, twirp.InternalErrorWith(err))
@@ -250,7 +250,7 @@ func (s *crypticTownServer) serveMakeHomeProtobuf(ctx context.Context, resp http
 				panic(r)
 			}
 		}()
-		respContent, err = s.MakeHome(ctx, reqContent)
+		respContent, err = s.SetHome(ctx, reqContent)
 	}()
 
 	if err != nil {
@@ -258,7 +258,7 @@ func (s *crypticTownServer) serveMakeHomeProtobuf(ctx context.Context, resp http
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Home and nil error while calling MakeHome. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *Home and nil error while calling SetHome. nil responses are not supported"))
 		return
 	}
 
@@ -689,13 +689,15 @@ func callError(ctx context.Context, h *twirp.ServerHooks, err twirp.Error) conte
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 119 bytes of a gzipped FileDescriptorProto
+	// 148 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xca, 0xc8, 0xcf, 0x4d,
-	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x57, 0x92, 0xe2, 0x62, 0x09, 0x2d, 0x4e, 0x2d, 0x12, 0x12,
-	0xe2, 0x62, 0xc9, 0x4b, 0xcc, 0x4d, 0x95, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x02, 0xb3, 0x95,
-	0xf4, 0xb8, 0x58, 0x3c, 0xf2, 0x73, 0x53, 0xb1, 0xc9, 0x81, 0xc4, 0x92, 0xf2, 0x53, 0x2a, 0x25,
-	0x98, 0x20, 0x62, 0x20, 0xb6, 0x91, 0x3a, 0x17, 0xb7, 0x73, 0x51, 0x65, 0x41, 0x49, 0x66, 0x72,
-	0x48, 0x7e, 0x79, 0x9e, 0x90, 0x04, 0x17, 0x87, 0x6f, 0x62, 0x76, 0x2a, 0xd8, 0x08, 0x56, 0x3d,
-	0x10, 0x25, 0x05, 0xa1, 0x92, 0xd8, 0xc0, 0x76, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x46,
-	0xc6, 0xea, 0x62, 0x89, 0x00, 0x00, 0x00,
+	0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x57, 0xf2, 0xe3, 0xe2, 0x0b, 0x4e, 0x2d, 0xf1, 0xc8, 0xcf,
+	0x4d, 0x0d, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x11, 0x12, 0xe1, 0x62, 0x2d, 0xc9, 0xcf, 0x4e,
+	0xcd, 0x93, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x0c, 0x82, 0x70, 0x84, 0x84, 0xb8, 0x58, 0xf2, 0x12,
+	0x73, 0x53, 0x25, 0x98, 0xc0, 0x82, 0x60, 0x36, 0x48, 0x2c, 0x29, 0x3f, 0xa5, 0x52, 0x82, 0x19,
+	0x22, 0x06, 0x62, 0x2b, 0xe9, 0x71, 0xb1, 0x80, 0x0c, 0x83, 0xab, 0x67, 0xc4, 0xa2, 0x9e, 0x09,
+	0xa1, 0xde, 0xc8, 0x80, 0x8b, 0xdb, 0xb9, 0xa8, 0xb2, 0xa0, 0x24, 0x33, 0x39, 0x24, 0xbf, 0x3c,
+	0x4f, 0x48, 0x91, 0x8b, 0x1d, 0xea, 0x1c, 0x21, 0x7e, 0x3d, 0x54, 0x87, 0x49, 0xb1, 0xea, 0x81,
+	0x78, 0x49, 0x6c, 0x60, 0x87, 0x1b, 0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0x05, 0x3b, 0x83, 0xf3,
+	0xc6, 0x00, 0x00, 0x00,
 }

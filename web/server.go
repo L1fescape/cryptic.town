@@ -5,27 +5,27 @@ import (
   "fmt"
   "encoding/json"
 
-  "github.com/go-redis/redis"
   "github.com/gorilla/mux"
+  db "github.com/l1fescape/cryptic.town/db"
 )
 
 var Prefix = "/"
 
 var dist = "web/dist"
 
-func GetHandler(client *redis.Client) *mux.Router {
+func GetHandler(store *db.Store) *mux.Router {
   r := mux.NewRouter()
 
   // Serve index file
   r.Handle(Prefix, http.FileServer(http.Dir(dist)))
 
   r.HandleFunc("/users", func(w http.ResponseWriter, req *http.Request) {
-    keys, _, err := client.Scan(0, "", 10).Result()
+    users, err := store.GetUsers()
     if err != nil {
-      keys = []string{}
+      users = []string{}
     }
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(keys)
+    json.NewEncoder(w).Encode(users)
   })
 
   // Serve assets
@@ -35,12 +35,15 @@ func GetHandler(client *redis.Client) *mux.Router {
   // todo: handle /andrew/some/path/with/slashes
   r.HandleFunc("/{name}", func(w http.ResponseWriter, req *http.Request) {
     name := mux.Vars(req)["name"]
-    val, err := client.Get(name).Result()
+    home, err := store.GetUserHome(name)
+    var body string
     if err != nil {
       w.WriteHeader(http.StatusNotFound)
-      val = "no user"
+      body = "no user"
+    } else {
+      body = home.Body
     }
-    fmt.Fprint(w, "<!doctype html>" + val)
+    fmt.Fprint(w, "<!doctype html>" + body)
   })
 
 
