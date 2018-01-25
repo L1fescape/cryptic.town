@@ -7,7 +7,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 all: clean build run
 
 .PHONY: clean
-clean: ; $(info $(M) cleaning)	@
+clean: ; $(info $(M) cleaning)
 	@rm -rf rpc/out
 	@rm -rf web/dist
 
@@ -15,12 +15,12 @@ clean: ; $(info $(M) cleaning)	@
 build: build-proto build-web
 
 .PHONY: build-proto
-build-proto: ; $(info $(M) generating proto files)	@
+build-proto: ; $(info $(M) generating proto files)
 	@mkdir -p ./rpc/out
 	@protoc -I ./rpc --twirp_out=./rpc/out --go_out=./rpc/out ./rpc/home.proto
 
 .PHONY: build-web
-build-web: clean; $(info $(M) building frontend)	@
+build-web: clean; $(info $(M) building frontend)
 	@cd web && yarn start
 
 .PHONY: run
@@ -31,5 +31,5 @@ run: ; $(info $(M) running service)	@
 all: clean build-proto dev-web
 
 .PHONY: dev-web
-dev-web: clean; $(info $(M) building frontend)	@
+dev-web: clean; $(info $(M) building frontend)
 	@cd web && yarn dev
