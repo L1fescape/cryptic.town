@@ -7,13 +7,23 @@ $ go get
 $ npm i -g yarn
 ```
 
-## Build
+## Run
+
+Build and run everything
 
 ```
-$ make
+$ SLACK_TOKEN=[token] make
+```
+
+Skip build and run
+
+```
+$ SLACK_TOKEN=[token] make run
 ```
 
 ## Develop
+
+Install [protobuf](https://github.com/google/protobuf)
 
 ```
 $ go get github.com/twitchtv/twirp/protoc-gen-twirp

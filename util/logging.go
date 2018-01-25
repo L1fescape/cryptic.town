@@ -33,8 +33,6 @@ func NewFilelog(filename string) (*log.Logger, error) {
     return nil, err
   }
 
-  logger := log.New(f, "", log.Ldate|log.Ltime)
-
-  return logger, nil
+  return log.New(f, "", log.Ldate|log.Ltime), nil
 }
 
