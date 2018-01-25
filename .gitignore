@@ -1,2 +1,4 @@
 /web/dist
 /web/node_modules
+/logs
+dump.rdb

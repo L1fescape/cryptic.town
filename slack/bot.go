@@ -1,8 +1,10 @@
 package slack
 
 import (
-  "github.com/nlopes/slack"
+  "os"
 
+  "github.com/nlopes/slack"
+  "github.com/go-redis/redis"
   db "github.com/l1fescape/cryptic.town/db"
   util "github.com/l1fescape/cryptic.town/util"
 )
@@ -25,6 +27,16 @@ func New(token string, store *db.Store) *Bot {
   bot := &Bot{
     api: slack.New(token),
     store: store,
+  }
+
+  if os.Getenv("SLACK_LOGFILE") != "" {
+    logger, err := util.NewFilelog(os.Getenv("SLACK_LOGFILE"))
+    if err != nil {
+      util.Log.Printf("error creating slack log file: %v", logger)
+    } else {
+      bot.api.SetDebug(true)
+      slack.SetLogger(logger)
+    }
   }
 
   return bot
@@ -104,13 +116,16 @@ Commands:
 func (b *Bot) SendUserToken(channel string, username string) error {
   token, err := b.store.GetUserToken(username)
   if err != nil {
-    // if the user doesn't exist, this will create it
-    // todo: this feels hacky
-    token, err = b.store.ResetUserToken(username)
-    if err != nil {
-      return err
+    if err == redis.Nil {
+      // create the user if it doesn't exist
+      if _, err = b.store.CreateOrSetHome(username, ""); err != nil {
+        return err
+      }
+      return b.SendUserToken(channel, username)
     }
+    return err
   }
+
   _, _, err = b.api.PostMessage(channel, "`"+token+"`", postMessageParams)
   return err
 }
@@ -118,8 +133,16 @@ func (b *Bot) SendUserToken(channel string, username string) error {
 func (b *Bot) ResetAndSendUserToken(channel string, username string) error {
   token, err := b.store.ResetUserToken(username)
   if err != nil {
+    if err == redis.Nil {
+      // create the user if it doesn't exist
+      if _, err = b.store.CreateOrSetHome(username, ""); err != nil {
+        return err
+      }
+      return b.SendUserToken(channel, username)
+    }
     return err
   }
+
   _, _, err = b.api.PostMessage(channel, "`"+token+"`", postMessageParams)
   return err
 }
